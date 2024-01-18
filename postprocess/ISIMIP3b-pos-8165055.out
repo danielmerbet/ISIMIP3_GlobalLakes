@@ -1,2 +1,0 @@
-EMPIEZA TODO Thu May 18 10:30:52 CEST 2023
-create_ISIMIP_NetCDF.py -p ISIMIP3b -t bias-adjusted -m IPSL-CM6A-LR -c historical -fi 1850 -f 2014
