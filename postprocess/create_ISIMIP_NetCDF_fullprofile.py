@@ -18,7 +18,7 @@ from pathlib import Path
 import datetime
 
 
-parser = argparse.ArgumentParser(description='Extract climate data for local lakes sector.')
+parser = argparse.ArgumentParser(description='Create final output for ISIMIP3.')
 
 parser.add_argument('-p', '--phase', dest='phase', required=True,
                     default='ISIMIP3a',
@@ -47,12 +47,14 @@ args = parser.parse_args()
 
 lakes_df = pd.read_csv('/scratch/brussel/106/vsc10623/preprocess/coord_area_depth.csv')
 
+reftime = 'days since 1601-01-01 00:00:00'
+
 variables='temp'
 variables_save='watertemp'
 units = 'K'
 longnames = 'Temperature of Lake Water'
 
-n_level = 10
+n_level = 50
 
 #level = -1 #is surface and 0 is bottom
 
@@ -83,7 +85,8 @@ coord_lon = [[np.arange(-179.75, 180,0.5)], [np.arange(1,721)]]
 #to ssave netcdf
 lons = np.arange(-180+resolution/2,180+resolution/2,resolution)
 lats = np.arange(-90+resolution/2,90+resolution/2,resolution)
-levlak = np.arange(1,11)
+#levlak = np.arange(1,11)
+levlak = np.arange(1,51)
 
 levlak_da = xr.DataArray(levlak,
                       coords = {'levlak':levlak}, 
@@ -102,13 +105,25 @@ lat_da = xr.DataArray(lats,
 
 
 #climate data path, to extract decades
-climate_path='/data/brussel/vo/000/bvo00012/data/dataset/ISIMIP/' + args.phase +'/InputData/climate/atmosphere/' + args.datatype + '/global/daily/' + args.climforcing + '/' + args.model + '/'
+climate_path='/data/brussel/vo/000/bvo00012/data/dataset/ISIMIP/' + args.phase +'/InputData/climate/atmosphere/bias-adjusted/global/daily/' + args.climforcing + '/' + args.model + '/'
 def get_periods(path):
     files = sorted(fnmatch.filter(os.listdir(path), '*_tas_*'))
     periods = [file.split('daily_')[1].split('.nc')[0] for file in files]
     return periods
 
-for period in get_periods(climate_path):
+if args.climforcing=='historical':
+    total_periods = ['1850_1850']
+    for i in range(1850, 2010, 10):
+        total_periods.append(str(i+1) + '_' + str(i+10))
+    total_periods.append('2011_2014')
+
+if args.climforcing=='ssp126' or args.climforcing=='ssp370' or args.climforcing=='ssp585':
+    total_periods = ['2015_2020']
+    for i in range(2020, 2100, 10):
+        total_periods.append(str(i+1) + '_' + str(i+10))
+
+#for period in get_periods(climate_path):
+for period in total_periods:
     print('comienza' + period)
     # delete if file exists
     #if os.path.isfile(filename_netcdf):
@@ -138,7 +153,7 @@ for period in get_periods(climate_path):
         
     for index, lake in lakes_df.iterrows():
         print('lago número' + str(index+1))
-        lake_file = args.model.lower() + '_' + args.climforcing + '_' + args.datatype + '_gotm_' + str(index+1) + '_daily_' + firstyear + '_' + final_year
+        lake_file = args.model.lower() + '_' + args.climforcing + '_bias-adjusted_gotm_' + str(index+1) + '_daily_' + firstyear + '_' + final_year
         #os.system('rm ' + lake_file + 'xr.nc')
         #os.system('ncrename -v z,z_coord '+ lake_file + '.nc ' + lake_file + 'xr.nc')
         lake_ds = xr.load_dataset(nc_individual_path + '/' + lake_file + 'xr.nc')
@@ -157,11 +172,12 @@ for period in get_periods(climate_path):
             print("OJO valor mayor a 100º en lago" + str(index+1))
             #break
         else:
-            sel_levels = np.round(np.linspace(1,lake_np_decade.shape[1],10)).astype(int)-1
+            sel_levels = np.round(np.linspace(1,lake_np_decade.shape[1],n_level)).astype(int)-1
             values[:, :,lat_pos_values-1, lon_pos_values-1] = lake_np_decade[:,sel_levels,:] + 273.15
+            print(values) 
             values_depth[:,lat_pos_values-1, lon_pos_values-1] = z_np[sel_levels]
-        #if index==11:
-        #    break
+        if index==11:
+            break
 
 
     values_da = xr.DataArray(values, 
@@ -180,7 +196,7 @@ for period in get_periods(climate_path):
                                 variables_save : values_da}, 
                                 attrs=attrs_global)
 
-    ds.time.encoding['units'] = 'days since 1901-01-01 00:00:00'
+    ds.time.encoding['units'] = reftime
 
     ds_depth = xr.Dataset(data_vars={'levlak':levlak_da,
                                 'lat' : lat_da,
@@ -191,7 +207,7 @@ for period in get_periods(climate_path):
 
     ds_merged = xr.merge([ds, ds_depth])
 
-    output_netcdf = 'gotm_'+ args.model.lower() + '_' + args.datatype + '_histsoc_default_'+ variables_save + '_global_daily_'+ first_year + '_' + last_year + '.nc'
+    output_netcdf = 'gotm_'+ args.model.lower() + '_'  + args.datatype + '_' + args.climforcing + '_histsoc_default_'+ variables_save + '_global_daily_'+ first_year + '_' + last_year + '.nc'
     #'gotm' + '_' + first_year + '_' + last_year + '.nc'
                                 
     ds_merged.to_netcdf(outpath / output_netcdf, format='NETCDF4_CLASSIC', mode='w', encoding={variables_save:{'dtype':'float32'}})

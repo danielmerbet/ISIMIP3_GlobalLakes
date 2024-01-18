@@ -1,12 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=3bGhpre
+#SBATCH --job-name=ISIMIP3bP
 #SBATCH --output=%x-%j.out
 #SBATCH --nodes=1
-#SBATCH --ntasks=28
-#SBATCH --partition=broadwell
-#SBATCH --mem=230G
+#SBATCH --mem=100G
 #SBATCH --time=05-00:00:00
+
+###SBATCH --partition=broadwell
+###SBATCH --mem=230G
+###SBATCH --ntasks=28
 
 
 ###SBATCH --reservation=gotm

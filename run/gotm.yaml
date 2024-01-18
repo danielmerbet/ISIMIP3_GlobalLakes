@@ -298,6 +298,8 @@ output:
       - source: Tice_surface
       - source: mld_bott
       - source: mld_surf
+      - source: albedo
+      - source: rho
       #- source: /*
       #- source: nuh                  # turbulence tiene, zi
       #- source: Hice

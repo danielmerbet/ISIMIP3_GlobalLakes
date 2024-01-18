@@ -165,11 +165,30 @@ def get_periods(path):
     periods = [file.split('daily_')[1].split('.nc')[0] for file in files]
     return periods
 
+if args.climforcing=='historical':
+    total_periods = ['1850_1850']
+    for i in range(1850, 2010, 10):
+        total_periods.append(str(i+1) + '_' + str(i+10))
+    total_periods.append('2011_2014')
 
-first_year = get_periods(path)[0].split(sep='_')[0]
-last_year = get_periods(path)[-1].split(sep='_')[1]
+if args.climforcing=='ssp126' or args.climforcing=='ssp370' or args.climforcing=='ssp585':
+    total_periods = ['2015_2020']
+    for i in range(2020, 2100, 10):
+        total_periods.append(str(i+1) + '_' + str(i+10))
 
-for period in get_periods(path):
+if args.climforcing=='picontrol':
+    total_periods = [] 
+    for i in range(1840, 2100, 10):
+        total_periods.append(str(i+1) + '_' + str(i+10))
+
+#first_year = get_periods(path)[0].split(sep='_')[0]
+#last_year = get_periods(path)[-1].split(sep='_')[1]
+
+first_year = total_periods[0].split(sep='_')[0]
+last_year = total_periods[-1].split(sep='_')[1]
+
+#for period in get_periods(path):
+for period in total_periods:
     print(' Period: ', period)
 
     # get file names for current period

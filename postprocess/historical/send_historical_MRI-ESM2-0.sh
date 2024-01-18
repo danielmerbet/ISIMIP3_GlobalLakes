@@ -25,8 +25,8 @@ ml xarray/2022.6.0-foss-2021b
 ml NCO/5.0.3-foss-2021b
 ml CDO/2.0.5-gompi-2021b
 
-echo create_ISIMIP_NetCDF.py -p ISIMIP3b -t bias-adjusted -m MRI-ESM2-0 -c historical -fi 1850 -f 2014
-./create_ISIMIP_NetCDF.py -p ISIMIP3b -t bias-adjusted -m MRI-ESM2-0 -c historical -fi 1850 -f 2014
+echo create_ISIMIP_NetCDF.py -p ISIMIP3b -t w5e5 -m MRI-ESM2-0 -c historical -fi 1850 -f 2014
+./create_ISIMIP_NetCDF.py -p ISIMIP3b -t w5e5 -m MRI-ESM2-0 -c historical -fi 1850 -f 2014
 
 
 echo TERMINA TODO `date`

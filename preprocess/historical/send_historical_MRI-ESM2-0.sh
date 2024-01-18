@@ -5,6 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --mem=100G
 #SBATCH --time=05-00:00:00
+#SBATCH --partition=broadwell,skylake,skylake_mpi
 
 ###SBATCH --ntasks=28
 ###SBATCH --partition=broadwell
